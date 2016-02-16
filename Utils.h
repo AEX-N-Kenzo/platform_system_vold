@@ -52,6 +52,9 @@ status_t ForceUnmount(const std::string& path, bool detach = false);
 /* Kills any processes using given path */
 status_t KillProcessesUsingPath(const std::string& path);
 
+/* Kills any processes using given path */
+status_t KillProcessesUsingPath(const std::string& path);
+
 /* Creates bind mount from source to target */
 status_t BindMount(const std::string& source, const std::string& target);
 
