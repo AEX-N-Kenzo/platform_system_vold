@@ -3284,6 +3284,32 @@ int cryptfs_enable_internal(char *howarg, int crypt_type, char *passwd,
         goto error_unencrypted;
     }
 
+    /* Do extra work for a better UX when doing the long inplace encryption */
+    if (how == CRYPTO_ENABLE_INPLACE) {
+        /* Now that /data is unmounted, we need to mount a tmpfs
+         * /data, set a property saying we're doing inplace encryption,
+         * and restart the framework.
+         */
+        if (fs_mgr_do_tmpfs_mount(DATA_MNT_POINT)) {
+            goto error_shutting_down;
+        }
+        /* Tells the framework that inplace encryption is starting */
+        property_set("vold.encrypt_progress", "0");
+
+        /* restart the framework. */
+        /* Create necessary paths on /data */
+        if (prep_data_fs()) {
+            goto error_shutting_down;
+        }
+
+        /* Ugh, shutting down the framework is not synchronous, so until it
+         * can be fixed, this horrible hack will wait a moment for it all to
+         * shut down before proceeding.  Without it, some devices cannot
+         * restart the graphics services.
+         */
+        sleep(2);
+    }
+
     /* Start the actual work of making an encrypted filesystem */
     /* Initialize a crypt_mnt_ftr for the partition */
     if (previously_encrypted_upto == 0) {
